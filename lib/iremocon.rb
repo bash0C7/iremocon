@@ -53,16 +53,15 @@ class Iremocon
   private
 
   def connect
-    @telnet = Net::Telnet.new("Host" => @host, "Port" => @port)
+    @telnet = TCPSocket.open(@host, @port)
   rescue Errno::ECONNREFUSED
     raise ConnectionError.new("Connection failed - #{@host}:#{@port}")
   end
 
   def command(name, *args)
-    str = ["*#{name}", *args].compact.join(";")
-    puts catch(:exit) {
-      @telnet.cmd(str) { |res| throw :exit, res }
-    }
+    str = ["*#{name}", *args].compact.join(";") + "\r\n"
+    @telnet.write str
+    puts @telnet.gets
   rescue Timeout::Error
     puts "Timeout - 10sec"
   end
